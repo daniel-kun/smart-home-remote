@@ -3,6 +3,9 @@ from unittest.mock import Mock
 from datetime import datetime, timedelta
 from dimmerhandler import DimmerHandler
 
+# TODO
+# Write a generic method to run all methods scheduled via `call_at`.
+
 class DimmerHandlerTests(unittest.TestCase):
     def test_short_press_should_toggle(self):
         """
@@ -35,7 +38,7 @@ class DimmerHandlerTests(unittest.TestCase):
         sut.button_down(timestamp=timeButtonDown)
         sut.button_up(timestamp=timeButtonDown + timedelta(milliseconds=700))
         # Simulate the scheduled call:
-        sched.call_at.call_args[0][1](sched.call_at.call_args[0][2])
+        sched.call_at.call_args[0][1](sched.call_at.call_args[0][2], sched.call_at.call_args[0][3])
 
         ctrl.toggle.assert_not_called()
         ctrl.startDim.assert_called_once()
@@ -54,7 +57,7 @@ class DimmerHandlerTests(unittest.TestCase):
 
         sut.button_down(timestamp=timeButtonDown)
         # Simulate the scheduled call:
-        sched.call_at.call_args[0][1](sched.call_at.call_args[0][2])
+        sched.call_at.call_args[0][1](sched.call_at.call_args[0][2], sched.call_at.call_args[0][3])
 
         ctrl.startDim.assert_called_once_with(DimmerHandler.DIM_UP)
 
@@ -70,14 +73,14 @@ class DimmerHandlerTests(unittest.TestCase):
         timeButtonDown = datetime.now()
         sut.button_down(timestamp=timeButtonDown)
         # Simulate the scheduled call:
-        sched.call_at.call_args[0][1](sched.call_at.call_args[0][2])
+        sched.call_at.call_args[0][1](sched.call_at.call_args[0][2], sched.call_at.call_args[0][3])
         sut.button_up(timestamp=timeButtonDown + timedelta(milliseconds=700))
         ctrl.reset_mock()
         sched.reset_mock()
 
         sut.button_down(timestamp=timeButtonDown + timedelta(seconds=4))
         # Simulate the scheduled call:
-        sched.call_at.call_args[0][1](sched.call_at.call_args[0][2])
+        sched.call_at.call_args[0][1](sched.call_at.call_args[0][2], sched.call_at.call_args[0][3])
 
         print(ctrl.startDim.method_calls)
         ctrl.startDim.assert_called_once_with(DimmerHandler.DIM_DOWN)
@@ -87,7 +90,18 @@ class DimmerHandlerTests(unittest.TestCase):
         When currently dimming up or down, should stop dimming when
         button up signal has been received.
         """
-        self.skipTest("To be implemented")
+        ctrl = Mock()
+        sched = Mock()
+        sut = DimmerHandler(ctrl, sched)
+        timeButtonDown = datetime.now()
+        
+        sut.button_down(timestamp=timeButtonDown)
+        # Simulate the scheduled call to start dimming:
+        sched.call_at.call_args[0][1](sched.call_at.call_args[0][2], sched.call_at.call_args[0][3])
+        sut.button_up(timestamp=timeButtonDown + timedelta(milliseconds=700))
+
+        ctrl.startDim.assert_called_once()
+        ctrl.stopDim.assert_called_once()
 
     def test_should_cancel_dimming_after_timeout(self):
         """
@@ -95,7 +109,17 @@ class DimmerHandlerTests(unittest.TestCase):
         should cancel dimming to prevent endless dimming disturbing other
         attempts to control the light.
         """
-        self.skipTest("To be implemented")
+        ctrl = Mock()
+        sched = Mock()
+        sut = DimmerHandler(ctrl, sched)
+        timeButtonDown = datetime.now()
+        
+        sut.button_down(timestamp=timeButtonDown)
+        # Simulate the scheduled call to start dimming and cancel dimming:
+        sched.call_at.call_args[0][1](sched.call_at.call_args[0][2], sched.call_at.call_args[0][3])
+        sched.call_at.call_args[0][1]()
+        ctrl.startDim.assert_called_once()
+        ctrl.stopDim.assert_called_once()
 
 if __name__ == '__main__':
     unittest.main()
