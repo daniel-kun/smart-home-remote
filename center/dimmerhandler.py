@@ -14,7 +14,8 @@ class AsyncIoScheduler:
             loop = asyncio.get_running_loop()
         else:
             loop = self.loop
-        return loop.call_later((when - datetime.utcnow()).total_seconds(), callback, *args)
+        later = (when - datetime.utcnow()).total_seconds()
+        return loop.call_later(later, callback, *args)
 
     def cancel(self, future):
         return future.cancel()
@@ -41,17 +42,22 @@ class DimmerHandler:
             self.nextDimDirection = self.DIM_UP
 
     def _stopDim(self):
-        self.controller.stopDim()
         if self.cancelDimScheduledCall != None:
             self.scheduler.cancel(self.cancelDimScheduledCall)
+        self.controller.stopDim()
 
-    def button_down(self, timestamp=datetime.now()):
+    def button_down(self, timestamp=None):
+        if timestamp == None:
+            timestamp = datetime.utcnow()
         self.lastButtonDown = timestamp
         self.startDimScheduledCall = self.scheduler.call_at(timestamp + timedelta(milliseconds=600), self._startDim, self.nextDimDirection, timestamp)
 
-    def button_up(self, timestamp=datetime.now()):
+    def button_up(self, timestamp=None):
+        if timestamp == None:
+            timestamp = datetime.utcnow()
         if (timestamp - self.lastButtonDown) <= timedelta(milliseconds=600):
-            self.scheduler.cancel(self.startDimScheduledCall)
+            if self.startDimScheduledCall != None:
+                self.scheduler.cancel(self.startDimScheduledCall)
             self.controller.toggle()
         else:
             self._stopDim()
