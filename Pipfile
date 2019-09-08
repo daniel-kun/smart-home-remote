@@ -8,6 +8,8 @@ verify_ssl = true
 [packages]
 requests = "*"
 bleak = "*"
+pylint = "*"
+aiohttp = {extras = ["speedups"],version = "*"}
 
 [requires]
 python_version = "3.7"

@@ -1,5 +1,7 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import os
+from aiohttp import web
 from bleak import discover, BleakClient
 from dimmerhandler import DimmerHandler, AsyncIoScheduler
 from gira_controller import GiraController
@@ -37,17 +39,37 @@ def notify_receiver(sender, data):
 
 async def run():
     global CHARACTERISTIC_UUID, ble_name
-    devices = await discover()
-    for d in devices:
-        print('Found {}'.format(d))
-        if d.name == "ESP32" or d.name == ble_name:
-            print("Connecting to {}".format(d))
-            async with BleakClient(d.address, loop=loop) as client:
-                print("Connected to {}".format(client))
-                await client.start_notify(CHARACTERISTIC_UUID, notify_receiver)
-                # Handle notifications while we are connected:
-                while await client.is_connected():
-                    print("Still alive, yay!")
-                    await asyncio.sleep(5, loop=loop)
+    print("Started BLE")
+    while True:
+        devices = await discover()
+        for d in devices:
+            print('Found {}'.format(d))
+            if d.name == "ESP32" or d.name == ble_name:
+                print("Connecting to {}".format(d))
+                async with BleakClient(d.address, loop=loop) as client:
+                    print("Connected to {}".format(client))
+                    await client.start_notify(CHARACTERISTIC_UUID, notify_receiver)
+                    # Handle notifications while we are connected:
+                    while await client.is_connected():
+                        print("Still alive, yay!")
+                        await asyncio.sleep(5, loop=loop)
+        await asyncio.sleep(5, loop=loop)
 
-loop.run_until_complete(run())
+async def handle(request):
+    print("Received web request")
+    text = "Hello"
+    return web.Response(text=text)
+
+async def start_ble_task(app):
+    app['ble_task'] = asyncio.create_task(run())
+
+try:
+    app = web.Application()
+    app.add_routes([web.get('/', handle),
+                    web.get('/{name}', handle)])
+    app.on_startup.append(start_ble_task)
+    if __name__ == '__main__':
+        web.run_app(app)
+
+except KeyboardInterrupt:
+    print("Bye bye")
