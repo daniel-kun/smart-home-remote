@@ -1,10 +1,12 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import os
+import ssl
 from aiohttp import web
 from bleak import discover, BleakClient
 from dimmerhandler import DimmerHandler, AsyncIoScheduler
 from gira_controller import GiraController
+from gira_service import GiraService
 
 loop = asyncio.get_event_loop()
 
@@ -20,9 +22,11 @@ dpOnOff2    = os.getenv("SMARTHOMEREMOTE_DP_ONOFF2")
 token       = os.getenv("SMARTHOMEREMOTE_APITOKEN")
 ble_name    = os.getenv("SMARTHOMEREMOTE_BLE_SERVERNAME")
 
+giraService = GiraService(serverIp, token)
+
 dimmerHandler = {
-    22: DimmerHandler(GiraController(serverIp, token, dpDim1, dpOnOff1), scheduler),
-    21: DimmerHandler(GiraController(serverIp, token, dpDim2, dpOnOff2), scheduler)
+    22: DimmerHandler(GiraController(giraService, dpDim1, dpOnOff1), scheduler),
+    21: DimmerHandler(GiraController(giraService, dpDim2, dpOnOff2), scheduler)
 }
 
 def notify_receiver(sender, data):
@@ -55,21 +59,17 @@ async def run():
                         await asyncio.sleep(5, loop=loop)
         await asyncio.sleep(5, loop=loop)
 
-async def handle(request):
-    print("Received web request")
-    text = "Hello"
-    return web.Response(text=text)
-
 async def start_ble_task(app):
     app['ble_task'] = asyncio.create_task(run())
 
-try:
-    app = web.Application()
-    app.add_routes([web.get('/', handle),
-                    web.get('/{name}', handle)])
-    app.on_startup.append(start_ble_task)
-    if __name__ == '__main__':
-        web.run_app(app)
+if __name__ == '__main__':
+    try:
+        app = web.Application()
+        giraService.setupWebApp(app)
+        app.on_startup.append(start_ble_task)
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain('cert.pem', 'key.pem')
+        web.run_app(app, ssl_context=context)
 
-except KeyboardInterrupt:
-    print("Bye bye")
+    except KeyboardInterrupt:
+        print("Bye bye")
