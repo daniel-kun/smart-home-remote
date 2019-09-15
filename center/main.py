@@ -5,8 +5,7 @@ import sys
 import ssl
 from aiohttp import web
 from bleak import discover, BleakClient
-from dimmerhandler import DimmerHandler, AsyncIoScheduler
-from gira_controller import GiraController
+from dimmerhandler import AsyncIoScheduler
 from config import load_config
 
 loop = asyncio.get_event_loop()

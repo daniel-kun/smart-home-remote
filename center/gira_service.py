@@ -32,7 +32,7 @@ class GiraService:
             ]
         })
         requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, dpDim=dpDim, token=self.token), verify=False, data=values)
-        print("GiraController.startDim({})".format(direction))
+        print("GiraService.startDim({})".format(direction))
 
     def stopDim(self, dpDim):
         values = json.dumps({
@@ -44,7 +44,22 @@ class GiraService:
             ]
         })
         requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, dpDim=dpDim, token=self.token), verify=False, data=values)
-        print("GiraController.stopDim()")
+        print("GiraService.stopDim()")
+
+    def switch(self, dpOnOff, onOrOff):
+        value = 1 if onOrOff else 0
+        values = json.dumps({
+            "values": [
+                {
+                    "uid": uid,
+                    "value": value
+                } for uid in dpOnOff
+            ]
+        })
+        requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, dpOnOff=dpOnOff, token=self.token), verify=False, data=values)
+        for uid in dpOnOff:
+            self.valueCache[uid] = value
+        print("GiraService.switch({})".format(onOrOff))
 
     def dpValuesSum(self, uids):
         if len(uids) == 0:
@@ -69,7 +84,7 @@ class GiraService:
         requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, dpOnOff=dpOnOff, token=self.token), verify=False, data=values)
         for uid in dpOnOff:
             self.valueCache[uid] = value
-        print("GiraController.toggle()")
+        print("GiraService.toggle()")
 
     async def value_changed(self, request):
         payload = await request.json()

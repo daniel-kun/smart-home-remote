@@ -1,4 +1,4 @@
-class GiraController:
+class GiraDimmerController:
     def __init__(self, giraServie, dpDim, dpOnOff):
         self.giraService = giraServie
         self.dpDim = dpDim
