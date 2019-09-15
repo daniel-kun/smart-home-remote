@@ -46,24 +46,29 @@ class GiraService:
         requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, dpDim=dpDim, token=self.token), verify=False, data=values)
         print("GiraController.stopDim()")
 
-    def invertedValue(self, uid):
-        if uid in self.valueCache:
-            return 1 - int(self.valueCache[uid]) # Invert value
+    def dpValuesSum(self, uids):
+        if len(uids) == 0:
+            return 0
         else:
-            return 1 # Just turn on in case we don't know the value, yet
+            return int(self.valueCache[uids[0]]) + self.dpValuesSum(uids[1:])
 
     def toggle(self, dpOnOff):
+        currentState = self.dpValuesSum(dpOnOff)
+        if currentState > 0:
+            value = 0 # If at least one light is on, turn all off
+        else:
+            value = 1 # If all are off, turn the lights on
         values = json.dumps({
             "values": [
                 {
                     "uid": uid,
-                    "value": self.invertedValue(uid)
+                    "value": value
                 } for uid in dpOnOff
             ]
         })
         requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, dpOnOff=dpOnOff, token=self.token), verify=False, data=values)
         for uid in dpOnOff:
-            self.valueCache[uid] = self.invertedValue(uid)
+            self.valueCache[uid] = value
         print("GiraController.toggle()")
 
     async def value_changed(self, request):
