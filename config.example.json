@@ -1,0 +1,56 @@
+{
+    "server": {
+        "ip": "192.168.1.42",
+        "access-token": "ASDKLJASLFKJSLFKHSDFKJ"
+    },
+    "buttons": {
+        // You can add buttons for later use and just set their value to null:
+        "27": null,
+        // "Dimmer" buttons toggle on short press and dim up/down (alternating) on long press
+        "26": {
+            "type": "Dimmer",
+            "functions": [ {
+                "dataPoints": {
+                    "OnOff": "a00f",
+                    "Shift": "a00g",
+                    "Brightness": "a00h"
+                }
+            } ]
+        },
+        // "Scene" buttons start a scene
+        "14": {
+            "type": "Scene",
+            "functions": [ {
+                "dataPoints": {
+                    "Scene": "a04o"
+                }
+            }]
+        },
+        "12": {
+            // A button can dim multiple lights at once:
+            "type": "Dimmer",
+            "functions": [ {
+                "dataPoints": {
+                    "OnOff": "a00f",
+                    "Shift": "a00g",
+                    "Brightness": "a00h"
+                }
+                },
+                {
+                    "dataPoints": {
+                        "OnOff": "a007",
+                        "Shift": "a008",
+                        "Brightness": "a009"
+                    }
+                },
+                {
+                    "dataPoints": {
+                        "OnOff": "a00b",
+                        "Shift": "a00c",
+                        "Brightness": "a00d"
+                    }
+                }
+            ]
+        }
+    }
+}
