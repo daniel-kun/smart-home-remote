@@ -6,9 +6,9 @@ from dimmerhandler import DimmerHandler
 def create_handler(conf, scheduler, services):
     if conf != None:
         if conf['type'] == 'Dimmer':
-            dpDim1 = conf['functions'][0]['dataPoints']['Shift']
-            dpOnOff1 = conf['functions'][0]['dataPoints']['OnOff']
-            return DimmerHandler(GiraController(services['gira'], dpDim1, dpOnOff1), scheduler)
+            dpDim = [fun['dataPoints']['Shift'] for fun in conf['functions']]
+            dpOnOff = [fun['dataPoints']['OnOff'] for fun in conf['functions']]
+            return DimmerHandler(GiraController(services['gira'], dpDim, dpOnOff), scheduler)
         else:
             return None
     else:

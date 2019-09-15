@@ -9,33 +9,61 @@ class GiraService:
         self.valueCache = dict()
 
     def load_cache(self, dpUid):
-        if not dpUid in self.valueCache:
-            r = requests.get("https://{serverIp}/api/v1/values/{dpUid}?token={token}".format(serverIp=self.serverIp, dpUid=dpUid, token=self.token), verify=False)
-            j = r.json()
-            if 'values' in j:
-                for v in j['values']:
-                    print("Cached value {} for {}".format(v['value'], v['uid']))
-                    self.valueCache[v['uid']] = v['value']
+        for uid in dpUid:
+            if not uid in self.valueCache:
+                r = requests.get("https://{serverIp}/api/v1/values/{uid}?token={token}".format(serverIp=self.serverIp, uid=uid, token=self.token), verify=False)
+                j = r.json()
+                if 'values' in j:
+                    for v in j['values']:
+                        print("Cached value {} for {}".format(v['value'], v['uid']))
+                        self.valueCache[v['uid']] = v['value']
 
     def startDim(self, dpDim, direction):
         if direction == 1:
             value = 100
         else:
             value = -100
-        requests.put("https://{serverIp}/api/v1/values/{dpDim}?token={token}".format(serverIp=self.serverIp, dpDim=dpDim, token=self.token), verify=False, data='{{"value": {}}}'.format(value))
+        values = json.dumps({
+            "values": [
+                {
+                    "uid": uid,
+                    "value": value
+                } for uid in dpDim
+            ]
+        })
+        requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, dpDim=dpDim, token=self.token), verify=False, data=values)
         print("GiraController.startDim({})".format(direction))
 
     def stopDim(self, dpDim):
-        requests.put("https://{serverIp}/api/v1/values/{dpDim}?token={token}".format(serverIp=self.serverIp, dpDim=dpDim, token=self.token), verify=False, data='{"value": 0}')
+        values = json.dumps({
+            "values": [
+                {
+                    "uid": uid,
+                    "value": "0"
+                } for uid in dpDim
+            ]
+        })
+        requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, dpDim=dpDim, token=self.token), verify=False, data=values)
         print("GiraController.stopDim()")
 
-    def toggle(self, dpOnOff):
-        if dpOnOff in self.valueCache:
-            value = 1 - int(self.valueCache[dpOnOff]) # Invert value
+    def invertedValue(self, uid):
+        if uid in self.valueCache:
+            return 1 - int(self.valueCache[uid]) # Invert value
         else:
-            value = 1 # Just turn on in case we don't know the value, yet
-        requests.put("https://{serverIp}/api/v1/values/{dpOnOff}?token={token}".format(serverIp=self.serverIp, dpOnOff=dpOnOff, token=self.token), verify=False, data='{{"value": {}}}'.format(value))
-        self.valueCache[dpOnOff] = str(value)
+            return 1 # Just turn on in case we don't know the value, yet
+
+    def toggle(self, dpOnOff):
+        values = json.dumps({
+            "values": [
+                {
+                    "uid": uid,
+                    "value": self.invertedValue(uid)
+                } for uid in dpOnOff
+            ]
+        })
+        requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, dpOnOff=dpOnOff, token=self.token), verify=False, data=values)
+        for uid in dpOnOff:
+            self.valueCache[uid] = self.invertedValue(uid)
         print("GiraController.toggle()")
 
     async def value_changed(self, request):
