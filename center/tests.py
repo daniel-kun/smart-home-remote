@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock
 from datetime import datetime, timedelta
-from dimmerhandler import DimmerHandler
+from dimmer_handler import DimmerHandler
 
 # TODO
 # Write a generic method to run all methods scheduled via `call_at`.
@@ -41,8 +41,8 @@ class DimmerHandlerTests(unittest.TestCase):
         sched.call_at.call_args[0][1](sched.call_at.call_args[0][2], sched.call_at.call_args[0][3])
 
         ctrl.toggle.assert_not_called()
-        ctrl.startDim.assert_called_once()
-        ctrl.stopDim.assert_called_once()
+        ctrl.start_dim.assert_called_once()
+        ctrl.stop_dim.assert_called_once()
 
     def test_down_signal_without_up_signal_within_threshold_should_start_dim_up(self):
         """
@@ -59,7 +59,7 @@ class DimmerHandlerTests(unittest.TestCase):
         # Simulate the scheduled call:
         sched.call_at.call_args[0][1](sched.call_at.call_args[0][2], sched.call_at.call_args[0][3])
 
-        ctrl.startDim.assert_called_once_with(DimmerHandler.DIM_UP)
+        ctrl.start_dim.assert_called_once_with(DimmerHandler.DIM_UP)
 
     def test_down_signal_without_up_signal_within_threshold_should_dim_down_when_dimmed_up_before(self):
         """
@@ -82,8 +82,8 @@ class DimmerHandlerTests(unittest.TestCase):
         # Simulate the scheduled call:
         sched.call_at.call_args[0][1](sched.call_at.call_args[0][2], sched.call_at.call_args[0][3])
 
-        print(ctrl.startDim.method_calls)
-        ctrl.startDim.assert_called_once_with(DimmerHandler.DIM_DOWN)
+        print(ctrl.start_dim.method_calls)
+        ctrl.start_dim.assert_called_once_with(DimmerHandler.DIM_DOWN)
 
     def test_up_signal_while_dimming_should_stop_dimming(self):
         """
@@ -100,8 +100,8 @@ class DimmerHandlerTests(unittest.TestCase):
         sched.call_at.call_args[0][1](sched.call_at.call_args[0][2], sched.call_at.call_args[0][3])
         sut.button_up(timestamp=timeButtonDown + timedelta(milliseconds=700))
 
-        ctrl.startDim.assert_called_once()
-        ctrl.stopDim.assert_called_once()
+        ctrl.start_dim.assert_called_once()
+        ctrl.stop_dim.assert_called_once()
 
     def test_should_cancel_dimming_after_timeout(self):
         """
@@ -118,8 +118,8 @@ class DimmerHandlerTests(unittest.TestCase):
         # Simulate the scheduled call to start dimming and cancel dimming:
         sched.call_at.call_args[0][1](sched.call_at.call_args[0][2], sched.call_at.call_args[0][3])
         sched.call_at.call_args[0][1]()
-        ctrl.startDim.assert_called_once()
-        ctrl.stopDim.assert_called_once()
+        ctrl.start_dim.assert_called_once()
+        ctrl.stop_dim.assert_called_once()
 
 if __name__ == '__main__':
     unittest.main()

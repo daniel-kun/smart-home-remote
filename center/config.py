@@ -2,7 +2,7 @@ import json
 from gira_service import GiraService
 from gira_dimmer_controller import GiraDimmerController
 from gira_value_controller import GiraValueController
-from dimmerhandler import DimmerHandler
+from dimmer_handler import DimmerHandler
 from scene_handler import SceneHandler
 
 def create_handler(conf, scheduler, services):
@@ -25,7 +25,7 @@ def create_handler(conf, scheduler, services):
 
 def create_config_from_json(j, scheduler, app):
     giraService = GiraService(j['server']['ip'], j['server']['access-token'])
-    giraService.setupWebApp(app)
+    giraService.setup_web_app(app)
     services = {
         "gira": giraService
     }

@@ -18,7 +18,7 @@ class GiraService:
                         print("Cached value {} for {}".format(v['value'], v['uid']))
                         self.valueCache[v['uid']] = v['value']
 
-    def startDim(self, dpDim, direction):
+    def start_dim(self, dpDim, direction):
         if direction == 1:
             value = 100
         else:
@@ -32,9 +32,9 @@ class GiraService:
             ]
         })
         requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, token=self.token), verify=False, data=values)
-        print("GiraService.startDim({})".format(direction))
+        print("GiraService.start_dim({})".format(direction))
 
-    def stopDim(self, dpDim):
+    def stop_dim(self, dpDim):
         values = json.dumps({
             "values": [
                 {
@@ -44,10 +44,10 @@ class GiraService:
             ]
         })
         requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, token=self.token), verify=False, data=values)
-        print("GiraService.stopDim()")
+        print("GiraService.stop_dim()")
 
     def value(self, dpValue, value, offActionDPs):
-        if (offActionDPs == None) or (not self.handleOffAction(offActionDPs)):
+        if (offActionDPs == None) or (not self.handle_off_action(offActionDPs)):
             values = json.dumps({
                 "values": [
                     {
@@ -62,7 +62,7 @@ class GiraService:
             print("GiraService.value({}, {}, {})".format(dpValue, value, offActionDPs))
 
     def switch(self, dpOnOff, onOrOff, offActionDPs):
-        if (offActionDPs == None) or (not self.handleOffAction(offActionDPs)):
+        if (offActionDPs == None) or (not self.handle_off_action(offActionDPs)):
             value = 1 if onOrOff else 0
             values = json.dumps({
                 "values": [
@@ -77,7 +77,7 @@ class GiraService:
                 self.valueCache[uid] = value
             print("GiraService.switch({})".format(onOrOff))
 
-    def dpValuesSum(self, uids):
+    def get_datapoint_value_sum(self, uids):
         if len(uids) == 0:
             return 0
         else:
@@ -85,10 +85,10 @@ class GiraService:
                 value = int(self.valueCache[uids[0]])
             else:
                 value = 0 # Assume off if state is not known
-            return value + self.dpValuesSum(uids[1:])
+            return value + self.get_datapoint_value_sum(uids[1:])
 
-    def handleOffAction(self, offActionDPs):
-        anyValueOn = self.dpValuesSum(offActionDPs) > 0
+    def handle_off_action(self, offActionDPs):
+        anyValueOn = self.get_datapoint_value_sum(offActionDPs) > 0
         if anyValueOn:
             # When any of the DPs are "on", switch them all off:
             print("GiraService: offAction executed, turning {} off".format(offActionDPs))
@@ -100,7 +100,7 @@ class GiraService:
             return False
 
     def toggle(self, dpOnOff):
-        currentState = self.dpValuesSum(dpOnOff)
+        currentState = self.get_datapoint_value_sum(dpOnOff)
         if currentState > 0:
             value = 0 # If at least one light is on, turn all off
         else:
@@ -127,7 +127,7 @@ class GiraService:
                     self.valueCache[e['uid']] = e['value']
         return web.Response(text="OK")
 
-    def setupWebApp(self, app):
+    def setup_web_app(self, app):
         app.add_routes([web.post('/value_changed', self.value_changed)])
         r = requests.post(
             "https://{serverIp}/api/v1/clients/{token}/callbacks".format(serverIp=self.serverIp, token=self.token),

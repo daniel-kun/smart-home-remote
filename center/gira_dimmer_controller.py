@@ -7,11 +7,11 @@ class GiraDimmerController:
         self.giraService.load_cache(self.dpDim)
         self.giraService.load_cache(self.dpOnOff)
 
-    def startDim(self, direction):
-        self.giraService.startDim(self.dpDim, direction)
+    def start_dim(self, direction):
+        self.giraService.start_dim(self.dpDim, direction)
 
-    def stopDim(self):
-        self.giraService.stopDim(self.dpDim)
+    def stop_dim(self):
+        self.giraService.stop_dim(self.dpDim)
 
     def toggle(self):
         self.giraService.toggle(self.dpOnOff)
