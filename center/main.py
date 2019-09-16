@@ -5,7 +5,7 @@ import sys
 import ssl
 from aiohttp import web
 from bleak import discover, BleakClient
-from dimmer_handler import AsyncIoScheduler
+from scheduler import Scheduler
 from config import load_config
 
 loop = asyncio.get_event_loop()
@@ -48,7 +48,7 @@ async def start_ble_task(app, config):
 if __name__ == '__main__':
     try:
         app = web.Application()
-        scheduler = AsyncIoScheduler(loop)
+        scheduler = Scheduler(loop)
         config = load_config(sys.argv[1], scheduler, app)
         print(config)
         app.on_startup.append(lambda app: start_ble_task(app, config))
