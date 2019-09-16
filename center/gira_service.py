@@ -31,7 +31,7 @@ class GiraService:
                 } for uid in dpDim
             ]
         })
-        requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, dpDim=dpDim, token=self.token), verify=False, data=values)
+        requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, token=self.token), verify=False, data=values)
         print("GiraService.startDim({})".format(direction))
 
     def stopDim(self, dpDim):
@@ -43,29 +43,61 @@ class GiraService:
                 } for uid in dpDim
             ]
         })
-        requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, dpDim=dpDim, token=self.token), verify=False, data=values)
+        requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, token=self.token), verify=False, data=values)
         print("GiraService.stopDim()")
 
-    def switch(self, dpOnOff, onOrOff):
-        value = 1 if onOrOff else 0
-        values = json.dumps({
-            "values": [
-                {
-                    "uid": uid,
-                    "value": value
-                } for uid in dpOnOff
-            ]
-        })
-        requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, dpOnOff=dpOnOff, token=self.token), verify=False, data=values)
-        for uid in dpOnOff:
-            self.valueCache[uid] = value
-        print("GiraService.switch({})".format(onOrOff))
+    def value(self, dpValue, value, offActionDPs):
+        if (offActionDPs == None) or (not self.handleOffAction(offActionDPs)):
+            values = json.dumps({
+                "values": [
+                    {
+                        "uid": uid,
+                        "value": value
+                    } for uid in dpValue
+                ]
+            })
+            requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, token=self.token), verify=False, data=values)
+            for uid in dpValue:
+                self.valueCache[uid] = value
+            print("GiraService.value({}, {}, {})".format(dpValue, value, offActionDPs))
+
+    def switch(self, dpOnOff, onOrOff, offActionDPs):
+        if (offActionDPs == None) or (not self.handleOffAction(offActionDPs)):
+            value = 1 if onOrOff else 0
+            values = json.dumps({
+                "values": [
+                    {
+                        "uid": uid,
+                        "value": value
+                    } for uid in dpOnOff
+                ]
+            })
+            requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, token=self.token), verify=False, data=values)
+            for uid in dpOnOff:
+                self.valueCache[uid] = value
+            print("GiraService.switch({})".format(onOrOff))
 
     def dpValuesSum(self, uids):
         if len(uids) == 0:
             return 0
         else:
-            return int(self.valueCache[uids[0]]) + self.dpValuesSum(uids[1:])
+            if uids[0] in self.valueCache:
+                value = int(self.valueCache[uids[0]])
+            else:
+                value = 0 # Assume off if state is not known
+            return value + self.dpValuesSum(uids[1:])
+
+    def handleOffAction(self, offActionDPs):
+        anyValueOn = self.dpValuesSum(offActionDPs) > 0
+        if anyValueOn:
+            # When any of the DPs are "on", switch them all off:
+            print("GiraService: offAction executed, turning {} off".format(offActionDPs))
+            self.switch(offActionDPs, False, None)
+            return True
+        else:
+            # If they are all off, do nothing and signal the caller that no offAction
+            # has been executed:
+            return False
 
     def toggle(self, dpOnOff):
         currentState = self.dpValuesSum(dpOnOff)
@@ -81,7 +113,7 @@ class GiraService:
                 } for uid in dpOnOff
             ]
         })
-        requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, dpOnOff=dpOnOff, token=self.token), verify=False, data=values)
+        requests.put("https://{serverIp}/api/v1/values?token={token}".format(serverIp=self.serverIp, token=self.token), verify=False, data=values)
         for uid in dpOnOff:
             self.valueCache[uid] = value
         print("GiraService.toggle()")

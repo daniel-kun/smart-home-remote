@@ -24,7 +24,33 @@
                 "dataPoints": {
                     "Scene": "a04o"
                 }
-            }]
+            }],
+            "parameters": {
+                "Scene": "3"
+            }
+        },
+        "15": {
+            // A Scene with a "offAction", see below:
+            "type": "Scene",
+            "functions": [ {
+                "dataPoints": {
+                    "Scene": "abcd"
+                }
+            } ],
+            "parameters": {
+                "Scene": "3"
+            },
+            // An "offAction" can be used to turn a "Scene" off, which originally does not support this.
+            // when "offAction" is given, before triggering a Scene, the system will check whether any
+            // of the given datapoints is "on" (<> 0) and, in this case, turn these datapoints off.
+            // If all datapoints are "off", then the scene will be triggered.
+            "offAction": {
+                "dataPoints": {
+                    "SomeLight": "a00j",
+                    "SomeOtherLight": "a00p",
+                    "AndAThirdLight": "a00v"
+                }
+            }
         },
         "12": {
             // A button can dim multiple lights at once:

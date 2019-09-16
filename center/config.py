@@ -1,7 +1,7 @@
 import json
 from gira_service import GiraService
 from gira_dimmer_controller import GiraDimmerController
-from gira_switch_controller import GiraSwitchController
+from gira_value_controller import GiraValueController
 from dimmerhandler import DimmerHandler
 from scene_handler import SceneHandler
 
@@ -13,7 +13,11 @@ def create_handler(conf, scheduler, services):
             return DimmerHandler(GiraDimmerController(services['gira'], dpDim, dpOnOff), scheduler)
         elif conf['type'] == "Scene":
             dpScene = [fun['dataPoints']['Scene'] for fun in conf['functions']]
-            return SceneHandler(GiraSwitchController(services['gira'], dpScene))
+            if "offAction" in conf:
+                offActionDPs = [value for (key,value) in conf['offAction']['dataPoints'].items()]
+            else:
+                offActionDPs = None
+            return SceneHandler(GiraValueController(services['gira'], dpScene, offActionDPs), conf['parameters']['Scene'])
         else:
             return None
     else:
