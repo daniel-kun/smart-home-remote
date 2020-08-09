@@ -1,5 +1,5 @@
 class GiraSwitchController:
-    def __init__(self, giraServie, dpOnOff, offActionDPs):
+    def __init__(self, giraServie, dpOnOff, offActionDPs=None):
         self.giraService = giraServie
         self.dpOnOff = dpOnOff
         self.offActionDPs = offActionDPs
@@ -12,4 +12,4 @@ class GiraSwitchController:
         self.giraService.switch(self.dpOnOff, onOrOff, self.offActionDPs)
 
     def toggle(self):
-        self.giraService.toggle(self.dpOnOff, self.offActionDPs)
+        self.giraService.toggle(self.dpOnOff)
