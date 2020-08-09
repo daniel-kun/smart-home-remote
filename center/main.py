@@ -22,7 +22,7 @@ def notify_receiver(sender, data, config):
     else:
         if pin in config and config[pin] != None:
             config[pin].button_up()
-    print("Received notification #{}!".format(upDown))
+    print(f"PIN {pin}: #{upDown}")
 
 async def run(config):
     global CHARACTERISTIC_UUID, ble_name
